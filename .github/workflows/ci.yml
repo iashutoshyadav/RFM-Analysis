@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Unit tests
+        run: pytest -q
+      - name: Full pipeline on the real dataset
+        run: python pipeline.py
+      - name: Dashboard smoke test
+        run: |
+          python -c "
+          from streamlit.testing.v1 import AppTest
+          at = AppTest.from_file('app.py', default_timeout=120).run()
+          assert not at.exception, at.exception
+          print('dashboard OK')
+          "
